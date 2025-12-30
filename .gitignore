@@ -1,0 +1,29 @@
+# Directories
+.bloop
+.bsp
+.history
+.idea
+.metals
+.vscode
+out
+target
+
+# Files
+metals.sbt
+
+# File types
+*.class
+*.hprof
+*.iml
+*.ipr
+*.iws
+*.log
+
+# Temporary files
+TODO*
+
+# Sensitive files
+secrets.*
+
+# Data
+docker/influxdb-data
