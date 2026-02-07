@@ -5,11 +5,13 @@
 .idea
 .metals
 .vscode
+.scala-build
 out
 target
 
 # Files
 metals.sbt
+.cline*
 
 # File types
 *.class
@@ -21,9 +23,3 @@ metals.sbt
 
 # Temporary files
 TODO*
-
-# Sensitive files
-secrets.*
-
-# Data
-docker/influxdb-data
