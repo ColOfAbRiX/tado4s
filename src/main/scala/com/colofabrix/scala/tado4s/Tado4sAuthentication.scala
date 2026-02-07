@@ -1,21 +1,20 @@
 package com.colofabrix.scala.tado4s
 
-import cats.effect.Async
-import cats.effect.Deferred
 import cats.effect.std.AtomicCell
+import cats.effect.{ Async, Deferred }
 import cats.implicits.given
+import com.colofabrix.scala.tado4s.Tado4sAuthentication.*
 import com.colofabrix.scala.tado4s.api.*
 import com.colofabrix.scala.tado4s.security.*
 import com.colofabrix.scala.tado4s.store.{ Tado4sTokenStore, TadoRefreshToken }
-import com.colofabrix.scala.tado4s.Tado4sAuthentication.*
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import org.http4s.*
+import org.http4s.Method.*
 import org.http4s.circe.CirceEntityDecoder.*
 import org.http4s.client.Client
 import org.http4s.client.dsl.Http4sClientDsl
 import org.http4s.client.middleware.{ Retry, RetryPolicy }
-import org.http4s.Method.*
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
@@ -120,11 +119,10 @@ final class Tado4sAuthentication[F[_]: Async] private (
     }
 
   /* Leader performs initial authentication.
-   *   - Reads file to check for stored token (exclusive - we're in Authenticating state)
-   *   - Gets auth token from Tado API
-   *   - Writes file with new token
-   *   - Signals all waiters via gate
-   */
+   * - Reads file to check for stored token (exclusive - we're in Authenticating state)
+   * - Gets auth token from Tado API
+   * - Writes file with new token
+   * - Signals all waiters via gate */
   private def doInitialAuth(gate: Gate[F], initialToken: TadoRefreshToken): F[Unit] =
     val work =
       for
@@ -148,11 +146,10 @@ final class Tado4sAuthentication[F[_]: Async] private (
     }
 
   /* Leader performs token refresh.
-   *   - Makes API call to get new tokens
-   *   - Writes file with new token (exclusive access)
-   *   - Signals all waiters via gate
-   *   - On error, restores previous state
-   */
+   * - Makes API call to get new tokens
+   * - Writes file with new token (exclusive access)
+   * - Signals all waiters via gate
+   * - On error, restores previous state */
   private def doRefreshAsLeader(gate: Gate[F], currentData: AuthenticatedData[F]): F[Client[F]] =
     val work =
       for

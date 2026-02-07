@@ -7,19 +7,19 @@ import io.circe.*
  *
  * NOTE: I could not find any sample data so this structure is untested
  */
-final case class HomeInstallationResponse (
+final case class HomeInstallationResponse(
   id: Int,
   `type`: String,
   revision: Int,
   state: String,
-  devices: Vector[Device]
+  devices: Vector[Device],
 ) derives Decoder
 
-final case class Device (
+final case class Device(
   deviceType: String,
   serialNo: String,
   shortSerialNo: String,
   currentFwVersion: String,
   connectionState: ConnectionState,
-  characteristics: Characteristics
+  characteristics: Characteristics,
 ) derives Decoder

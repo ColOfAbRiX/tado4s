@@ -25,7 +25,7 @@ final case class TadoConfig(
   httpTimeout: FiniteDuration = 30.seconds,
   maxRetries: Int = 5,
   maxRetryTime: FiniteDuration = 1.minute,
-  ignoreSsl: Boolean = true
+  ignoreSsl: Boolean = true,
 ) derives ConfigReader
 
 /**

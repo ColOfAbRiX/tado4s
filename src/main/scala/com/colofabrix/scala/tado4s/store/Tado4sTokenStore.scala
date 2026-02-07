@@ -4,7 +4,7 @@ import cats.effect.Sync
 import cats.implicits.given
 import com.colofabrix.scala.tado4s.TadoConfig
 import com.typesafe.config.ConfigRenderOptions
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 import pureconfig.*
 
 object Tado4sTokenStore {
@@ -31,9 +31,9 @@ object Tado4sTokenStore {
    */
   def save[F[_]: Sync](token: TadoRefreshToken): F[Unit] =
     Sync[F].blocking {
-      val configValue = ConfigWriter[TadoRefreshToken].to(token)
+      val configValue   = ConfigWriter[TadoRefreshToken].to(token)
       val renderOptions = ConfigRenderOptions.concise().setFormatted(true).setJson(false)
-      val content = configValue.render(renderOptions)
+      val content       = configValue.render(renderOptions)
       Files.writeString(tokenPath, content)
       ()
     }

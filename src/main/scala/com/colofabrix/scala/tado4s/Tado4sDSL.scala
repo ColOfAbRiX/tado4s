@@ -73,7 +73,7 @@ trait Tado4sDSL {
       durationInSeconds: Option[Int] = None,
     ): F[ZoneOverlayResponse] =
       val termination = ZoneOverlayRequest.Termination(`type` = terminationType, durationInSeconds = durationInSeconds)
-      val setting =
+      val setting     =
         ZoneOverlayRequest.Setting(
           `type` = "HEATING",
           power = "ON",

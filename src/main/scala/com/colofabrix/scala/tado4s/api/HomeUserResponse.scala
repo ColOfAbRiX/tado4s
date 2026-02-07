@@ -2,49 +2,49 @@ package com.colofabrix.scala.tado4s.api
 
 import io.circe.*
 
-final case class HomeUserResponse (
+final case class HomeUserResponse(
   name: String,
   email: String,
   username: String,
   id: String,
   homes: Vector[Homes],
   locale: String,
-  mobileDevices: Vector[MobileDevices]
+  mobileDevices: Vector[MobileDevices],
 ) derives Decoder
 
-final case class BearingFromHome (
+final case class BearingFromHome(
   degrees: Double,
-  radians: Double
+  radians: Double,
 ) derives Decoder
 
-final case class DeviceMetadata (
+final case class DeviceMetadata(
   platform: String,
   osVersion: String,
   model: String,
-  locale: String
+  locale: String,
 ) derives Decoder
 
-final case class Homes (
+final case class Homes(
   id: Int,
-  name: String
+  name: String,
 ) derives Decoder
 
-final case class Location (
+final case class Location(
   stale: Boolean,
   atHome: Boolean,
   bearingFromHome: BearingFromHome,
-  relativeDistanceFromHomeFence: Double
+  relativeDistanceFromHomeFence: Double,
 ) derives Decoder
 
-final case class MobileDevices (
+final case class MobileDevices(
   name: String,
   id: Int,
   settings: Settings,
   location: Location,
-  deviceMetadata: DeviceMetadata
+  deviceMetadata: DeviceMetadata,
 ) derives Decoder
 
-final case class PushNotifications (
+final case class PushNotifications(
   lowBatteryReminder: Boolean,
   awayModeReminder: Boolean,
   homeModeReminder: Boolean,
@@ -53,14 +53,12 @@ final case class PushNotifications (
   incidentDetection: Boolean,
   energyIqReminder: Boolean,
   tariffHighPriceAlert: Boolean,
-  tariffLowPriceAlert: Boolean
+  tariffLowPriceAlert: Boolean,
 ) derives Decoder
 
-final case class Settings (
+final case class Settings(
   geoTrackingEnabled: Boolean,
   specialOffersEnabled: Boolean,
   onDemandLogRetrievalEnabled: Boolean,
-  pushNotifications: PushNotifications
+  pushNotifications: PushNotifications,
 ) derives Decoder
-
-

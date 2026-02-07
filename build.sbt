@@ -22,8 +22,11 @@ val scodecBitsVersion      = "1.1.38"
 
 Global / run / fork              := true
 Global / onChangedBuildSource    := ReloadOnSourceChanges
-Global / tpolecatExcludeOptions ++= Set(ScalacOptions.warnUnusedLocals)
+Global / tpolecatExcludeOptions ++= Set(ScalacOptions.warnUnusedLocals, ScalacOptions.warnUnusedImports)
 Test / tpolecatScalacOptions     := Set.empty
+
+addCommandAlias("styleApply", "; scalafix OrganizeImports; scalafmtAll")
+addCommandAlias("styleCheck", "; scalafix --check; scalafmtCheckAll")
 
 lazy val root =
   project
@@ -31,7 +34,7 @@ lazy val root =
     .settings(
       name                 := "tado4s",
       version              := "1.0.0",
-      organization         := "com.colofabrix.scala.tado4s",
+      organization         := "com.colofabrix.scala",
       scalaVersion         := scala3Version,
       scalacOptions        += "-preview",
       libraryDependencies ++= List(

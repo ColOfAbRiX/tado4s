@@ -5,9 +5,7 @@ import cats.effect.kernel.Resource
 import cats.implicits.given
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
-import javax.net.ssl.SSLContext
-import javax.net.ssl.TrustManager
-import javax.net.ssl.X509TrustManager
+import javax.net.ssl.{ SSLContext, TrustManager, X509TrustManager }
 import org.http4s.client.Client
 
 object SSLValidationClient {

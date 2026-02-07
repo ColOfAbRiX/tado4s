@@ -10,12 +10,12 @@ import fs2.io.net.Network
 import fs2.io.net.tls.TLSContext
 import java.time.LocalDate
 import org.http4s.*
+import org.http4s.Method.*
 import org.http4s.circe.CirceEntityDecoder.*
 import org.http4s.circe.CirceEntityEncoder.*
 import org.http4s.client.Client
 import org.http4s.client.dsl.Http4sClientDsl
 import org.http4s.ember.client.EmberClientBuilder
-import org.http4s.Method.*
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 

@@ -8,7 +8,7 @@ import io.circe.derivation.Configuration
 /**
  * HomeDeviceResponse
  */
-final case class HomeDeviceResponse (
+final case class HomeDeviceResponse(
   deviceType: String,
   serialNo: String,
   shortSerialNo: String,
@@ -21,7 +21,7 @@ final case class HomeDeviceResponse (
   mountingState: Option[MountingState],
   mountingStateWithError: Option[String],
   orientation: Option[DeviceOrientation],
-  childLockEnabled: Option[Boolean]
+  childLockEnabled: Option[Boolean],
 ) derives Decoder
 
 final case class Characteristics(

@@ -5,8 +5,8 @@ import cats.implicits.given
 import com.colofabrix.scala.tado4s.store.TimeSlots.*
 import java.time.*
 import java.util.concurrent.TimeUnit
-import scala.collection.immutable.TreeMap
 import scala.collection.SortedMap
+import scala.collection.immutable.TreeMap
 import scala.concurrent.duration.FiniteDuration
 import scala.jdk.DurationConverters.*
 

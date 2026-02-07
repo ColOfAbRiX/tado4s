@@ -1,7 +1,6 @@
 package com.colofabrix.scala.tado4s.api
 
-import io.circe.Decoder
-import io.circe.Encoder
+import io.circe.{ Decoder, Encoder }
 
 /** Response for mobile devices */
 final case class MobileDevicesResponse(

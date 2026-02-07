@@ -66,7 +66,7 @@ object AccountResponse {
     incidentDetection: Boolean,
     energyIqReminder: Boolean,
     tariffHighPriceAlert: Boolean,
-    tariffLowPriceAlert: Boolean
+    tariffLowPriceAlert: Boolean,
   ) derives Decoder
 
 }
