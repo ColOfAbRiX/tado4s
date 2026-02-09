@@ -8,16 +8,15 @@ zone controls, and home automation features.
 
 Built on [http4s](https://http4s.org/) and [Cats Effect](https://typelevel.org/cats-effect/),
 Tado4s provides a pure functional interface to the Tado REST API with OAuth2 authentication,
-automatic token refresh, and typed request/response models.
+automatic token refresh, persistent token storage, and typed request/response models.
 
 ## Features
 
 - **Type-Safe API** - Strongly typed request and response models for all endpoints
 - **Functional Design** - Built on Cats Effect with pure functional semantics
-- **OAuth2 Authentication** - Handles device code flow and automatic token refresh
-- **Comprehensive Coverage** - Supports homes, zones, devices, weather, and day reports
+- **Comprehensive Coverage** - Supports homes, zones, devices, weather, day reports, and more
+- **Retry Logic** - Built-in exponential backoff retry policy for API calls
 - **Streaming Ready** - Returns `F[_]` effects compatible with fs2 streams
-- **SSL Configuration** - Optional SSL validation bypass for development
 
 ## Supported Endpoints
 
@@ -45,11 +44,17 @@ automatic token refresh, and typed request/response models.
 Tado4s uses OAuth2 device code flow. First, obtain a refresh token using the provided Python script:
 
 ```bash
-cd tado4s/scripts
+cd scripts
 python tado_device_auth.py
 ```
 
 This will guide you through the authentication process and provide a refresh token.
+The script outputs environment variables that you can use:
+
+```bash
+HOMEDATA_TADO_TOKEN="your-refresh-token"
+HOMEDATA_TADO_TOKEN_ISSUE_TIME="2024-01-01T00:00:00+00:00"
+```
 
 ### Basic Usage
 
@@ -59,16 +64,18 @@ Create a client and fetch account information:
 import cats.effect.*
 import com.colofabrix.scala.tado4s.*
 import com.colofabrix.scala.tado4s.store.TadoRefreshToken
+import java.time.OffsetDateTime
 
 object MyApp extends IOApp.Simple {
 
   def run: IO[Unit] =
     for
-      client <- Tado4sClient[IO](None)
-      _      <- client.authenticate(TadoRefreshToken("your-refresh-token"))
-      account <- client.getAccountInfo()
-      homeId   = account.homes.head.id
-      _       <- IO.println(s"Home ID: $homeId")
+      client       <- Tado4sClient[IO](None)
+      initialToken = TadoRefreshToken("your-refresh-token", OffsetDateTime.now())
+      _            <- client.authenticate(initialToken)
+      account      <- client.getAccountInfo()
+      homeId        = account.homes.head.id
+      _            <- IO.println(s"Home ID: $homeId")
     yield ()
 
 }
@@ -80,7 +87,7 @@ object MyApp extends IOApp.Simple {
 val zones =
   for
     client  <- Tado4sClient[IO](None)
-    _       <- client.authenticate(refreshToken)
+    _       <- client.authenticate(initialToken)
     account <- client.getAccountInfo()
     homeId   = account.homes.head.id
     zones   <- client.getHomeZones(homeId)
@@ -93,7 +100,7 @@ val zones =
 val zoneState =
   for
     client <- Tado4sClient[IO](None)
-    _      <- client.authenticate(refreshToken)
+    _      <- client.authenticate(initialToken)
     state  <- client.getZoneState(homeId = 12345, zoneId = 1)
   yield state
 ```
@@ -106,7 +113,7 @@ import java.time.LocalDate
 val dayReport =
   for
     client <- Tado4sClient[IO](None)
-    _      <- client.authenticate(refreshToken)
+    _      <- client.authenticate(initialToken)
     report <- client.getZoneDayReport(
       homeId = 12345,
       zoneId = 1,
@@ -121,7 +128,7 @@ val dayReport =
 val weather =
   for
     client  <- Tado4sClient[IO](None)
-    _       <- client.authenticate(refreshToken)
+    _       <- client.authenticate(initialToken)
     weather <- client.getHomeWeather(homeId = 12345)
   yield weather
 ```
@@ -135,7 +142,7 @@ The main entry point for interacting with the Tado API.
 | Method                               | Description                              |
 |--------------------------------------|------------------------------------------|
 | `authenticate(refreshToken)`         | Authenticate with refresh token          |
-| `logout()`                           | Clear authentication                     |
+| `logout()`                           | Clear authentication and delete tokens   |
 | `getAccountInfo()`                   | Get user account information             |
 | `getHomeDetails(homeId)`             | Get home configuration                   |
 | `getHomeZones(homeId)`               | Get zones for a home                     |
@@ -186,26 +193,49 @@ Configure the client via `application.conf`:
 
 ```hocon
 tado4s {
-  api-base = "https://my.tado.com/api/v2"
-  auth-url = "https://auth.tado.com/oauth"
-  http-timeout = 30 seconds
-  ignore-ssl = false
+  api-auth       = "https://login.tado.com"
+  api-base       = "https://my.tado.com/api/v2"
+  http-timeout   = 30 seconds
+  max-retries    = 5
+  max-retry-time = 1 minute
+  ignore-ssl     = false
+  client-id      = ${?TADO4S_CLIENT_ID}
+  token-path     = ~/.tado4s/token.conf
 }
 ```
 
 Or programmatically:
 
 ```scala
+import scala.concurrent.duration.*
+import java.nio.file.Paths
+
 val config =
   TadoConfig(
     apiBase = Uri.unsafeFromString("https://my.tado.com/api/v2"),
-    authUrl = Uri.unsafeFromString("https://auth.tado.com/oauth"),
+    apiAuth = Uri.unsafeFromString("https://login.tado.com"),
+    clientId = "your-client-id",
+    tokenPath = Paths.get(System.getProperty("user.home"), ".tado4s", "token.conf"),
     httpTimeout = 30.seconds,
+    maxRetries = 5,
+    maxRetryTime = 1.minute,
     ignoreSsl = false,
   )
 
 val client = Tado4sClient[IO](Some(config))
 ```
+
+### Token Persistence
+
+Tado4s automatically persists refresh tokens to disk at the configured `token-path`
+(default: `~/.tado4s/token.conf`). When authenticating:
+
+1. The client checks for an existing stored token
+2. Compares the stored token's issue time with the provided token
+3. Uses the newer token for authentication
+4. Saves the new refresh token after successful authentication
+
+This ensures tokens survive application restarts and prevents token conflicts.
 
 ## Error Handling
 
@@ -228,12 +258,17 @@ client
 
 Tado uses OAuth2 with device code flow:
 
-1. Run the authentication script: `python tado4s/scripts/tado_device_auth.py`
+1. Run the authentication script: `python scripts/tado_device_auth.py`
 2. Follow the prompts to authorize the application
 3. Store the refresh token securely
-4. Pass the refresh token to `client.authenticate()`
+4. Create a `TadoRefreshToken` with the token and issue time
+5. Pass the refresh token to `client.authenticate()`
 
-The client automatically handles access token refresh when needed.
+The client automatically:
+- Handles access token refresh when needed
+- Persists new refresh tokens to disk
+- Uses a thread-safe state machine to prevent concurrent token refreshes (single-flight pattern)
+- Applies exponential backoff retry policy for transient failures
 
 ## Contributing
 
@@ -247,7 +282,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-Tado4s is released under the MIT license. See [LICENSE](../LICENSE) for details.
+Tado4s is released under the MIT license. See [LICENSE](LICENSE) for details.
 
 ## Author
 
@@ -256,5 +291,6 @@ Tado4s is released under the MIT license. See [LICENSE](../LICENSE) for details.
 ## See Also
 
 - [Tado API Reference](https://blog.scphillips.com/posts/2017/01/the-tado-api-v2/)
+- [Tado OpenAPI Spec](https://kritsel.github.io/tado-openapispec-v2/swagger.html)
 - [http4s](https://http4s.org/) - Typeful, functional HTTP for Scala
 - [Cats Effect](https://typelevel.org/cats-effect/) - The pure asynchronous runtime for Scala
