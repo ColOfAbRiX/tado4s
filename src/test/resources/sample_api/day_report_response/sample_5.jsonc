@@ -2618,7 +2618,7 @@
           }
         },
         "20:00" : {
-          "state" : "NIGHT_CLOUDY",
+          "state" : "SNOW",
           "temperature" : {
             "celsius" : 7.82,
             "fahrenheit" : 46.08

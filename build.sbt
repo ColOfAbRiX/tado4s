@@ -33,7 +33,7 @@ lazy val root =
     .in(file("."))
     .settings(
       name                 := "tado4s",
-      version              := "1.0.0",
+      version              := "1.0.1",
       organization         := "com.colofabrix.scala",
       scalaVersion         := scala3Version,
       scalacOptions        += "-preview",
