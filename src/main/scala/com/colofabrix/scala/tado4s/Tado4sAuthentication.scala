@@ -14,7 +14,6 @@ import org.http4s.Method.*
 import org.http4s.circe.CirceEntityDecoder.*
 import org.http4s.client.Client
 import org.http4s.client.dsl.Http4sClientDsl
-import org.http4s.client.middleware.{ Retry, RetryPolicy }
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
@@ -63,7 +62,7 @@ final class Tado4sAuthentication[F[_]: Async] private (
   def logout(): F[Unit] =
     for
       _ <- logger.debug("Logout")
-      _ <- Tado4sTokenStore.clear[F]()
+      _ <- Tado4sTokenStore.clear[F](config.tokenPath)
       _ <- atomicState.set(AuthState.Unauthenticated())
       _ <- logger.info("Logged out, token file deleted")
     yield ()
@@ -126,16 +125,17 @@ final class Tado4sAuthentication[F[_]: Async] private (
   private def doInitialAuth(gate: Gate[F], initialToken: TadoRefreshToken): F[Unit] =
     val work =
       for
-        _                     <- logger.info("Starting initial authentication...")
-        storedToken           <- Tado4sTokenStore.load[F]()
-        tokenToUse             = selectNewerToken(storedToken, Some(initialToken)).getOrElse(initialToken)
-        (authToken, newToken) <- refreshRequest(tokenToUse)
-        client                 = buildHttpClient(authToken)
-        data                   = AuthenticatedData(newToken, authToken, client)
-        _                     <- Tado4sTokenStore.save(newToken)
-        _                     <- atomicState.set(AuthState.Authenticated(data))
-        _                     <- gate.complete(Right(data))
-        _                     <- logger.info("Authentication successful")
+        _                    <- logger.info("Starting initial authentication...")
+        storedToken          <- Tado4sTokenStore.load[F](config.tokenPath)
+        tokenToUse            = selectNewerToken(storedToken, Some(initialToken)).getOrElse(initialToken)
+        tokens               <- refreshRequest(tokenToUse)
+        (authToken, newToken) = tokens
+        client                = buildHttpClient(authToken)
+        data                  = AuthenticatedData(newToken, authToken, client)
+        _                    <- Tado4sTokenStore.save(config.tokenPath)(newToken)
+        _                    <- atomicState.set(AuthState.Authenticated(data))
+        _                    <- gate.complete(Right(data))
+        _                    <- logger.info("Authentication successful")
       yield ()
 
     work.handleErrorWith { error =>
@@ -153,14 +153,15 @@ final class Tado4sAuthentication[F[_]: Async] private (
   private def doRefreshAsLeader(gate: Gate[F], currentData: AuthenticatedData[F]): F[Client[F]] =
     val work =
       for
-        _                        <- logger.info("Refreshing authentication token...")
-        (newAuthToken, newToken) <- refreshRequest(currentData.refreshToken)
-        newClient                 = buildHttpClient(newAuthToken)
-        newData                   = AuthenticatedData(newToken, newAuthToken, newClient)
-        _                        <- Tado4sTokenStore.save(newToken)
-        _                        <- atomicState.set(AuthState.Authenticated(newData))
-        _                        <- gate.complete(Right(newData))
-        _                        <- logger.info("Token refresh successful")
+        _                       <- logger.info("Refreshing authentication token...")
+        tokens                  <- refreshRequest(currentData.refreshToken)
+        (newAuthToken, newToken) = tokens
+        newClient                = buildHttpClient(newAuthToken)
+        newData                  = AuthenticatedData(newToken, newAuthToken, newClient)
+        _                       <- Tado4sTokenStore.save(config.tokenPath)(newToken)
+        _                       <- atomicState.set(AuthState.Authenticated(newData))
+        _                       <- gate.complete(Right(newData))
+        _                       <- logger.info("Token refresh successful")
       yield newClient
 
     work.handleErrorWith { error =>
@@ -189,7 +190,7 @@ final class Tado4sAuthentication[F[_]: Async] private (
   private def refreshRequest(refreshToken: TadoRefreshToken): F[(TadoAuthToken, TadoRefreshToken)] =
     val requestBody =
       UrlForm(
-        "client_id"     -> config.clientId,
+        "client_id"     -> config.apiClientId,
         "grant_type"    -> "refresh_token",
         "refresh_token" -> refreshToken.token,
         "scope"         -> "offline_access",
@@ -207,14 +208,9 @@ final class Tado4sAuthentication[F[_]: Async] private (
     yield (newAuthToken, newRefreshToken)
 
   private def buildHttpClient(authToken: TadoAuthToken): Client[F] =
-    val retryPolicy =
-      RetryPolicy[F](
-        backoff = RetryPolicy.exponentialBackoff(config.maxRetryTime, config.maxRetries),
-      )
-
-    Retry(retryPolicy):
-      BearerTokenAuthClient[F](authToken.bearerToken):
-        httpClient
+    BearerTokenAuthClient[F](authToken.bearerToken) {
+      httpClient
+    }
 
 }
 
@@ -253,15 +249,16 @@ object Tado4sAuthentication {
   final private case class TadoAuthToken(
     bearerToken: String,
     expiry: OffsetDateTime,
-  ):
+  ) {
     def isExpired: Boolean =
       val now = OffsetDateTime.now()
       expiry.isBefore(now) || expiry.isEqual(now)
 
     override def toString(): String =
-      s"TadoAuthToken(" +
-      s"bearerToken=${bearerToken.take(8)}...${bearerToken.takeRight(8)}, " +
+      "TadoAuthToken(" +
+      "bearerToken=***, " +
       s"expiry=${expiry.truncatedTo(ChronoUnit.SECONDS).toLocalDateTime}" +
-      s")"
+      ")"
+  }
 
 }

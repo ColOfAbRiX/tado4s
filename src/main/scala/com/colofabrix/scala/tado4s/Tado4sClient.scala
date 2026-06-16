@@ -1,10 +1,10 @@
 package com.colofabrix.scala.tado4s
 
-import cats.effect.Async
+import cats.MonadThrow
+import cats.effect.{ Async, Resource }
 import cats.implicits.*
 import com.colofabrix.scala.http4s.middleware.betterlogger.ClientLogger
 import com.colofabrix.scala.tado4s.api.*
-import com.colofabrix.scala.tado4s.security.*
 import com.colofabrix.scala.tado4s.store.TadoRefreshToken
 import fs2.io.net.Network
 import fs2.io.net.tls.TLSContext
@@ -15,9 +15,11 @@ import org.http4s.circe.CirceEntityDecoder.*
 import org.http4s.circe.CirceEntityEncoder.*
 import org.http4s.client.Client
 import org.http4s.client.dsl.Http4sClientDsl
+import org.http4s.client.middleware.*
 import org.http4s.ember.client.EmberClientBuilder
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+import scala.concurrent.duration.*
 
 /**
  * Tado Client for Scala
@@ -26,7 +28,7 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
  *            https://kritsel.github.io/tado-openapispec-v2/swagger.html
  */
 final class Tado4sClient[F[_]: Async] private (
-  config: TadoConfig,
+  val config: TadoConfig,
   authenticator: Tado4sAuthentication[F],
 ) extends Http4sClientDsl[F] {
 
@@ -52,7 +54,7 @@ final class Tado4sClient[F[_]: Async] private (
    */
   def getAccountInfo(): F[AccountResponse] =
     for
-      _      <- logger.debug(s"Called getAccountInfo()")
+      _      <- logger.debug("Called getAccountInfo()")
       client <- authenticator.getAuthenticatedClient()
       request = GET(config.apiBase / "me")
       result <- client.expectOr[AccountResponse](request)(handleClientExpectError)
@@ -312,7 +314,7 @@ final class Tado4sClient[F[_]: Async] private (
       client <- authenticator.getAuthenticatedClient()
       url     = config.apiBase / "homes" / request.homeId / "zones" / request.zoneId / "overlay"
       _      <- client.successful(DELETE(url))
-      _      <- logger.trace(s"Response for deleteZoneOverlay(): success")
+      _      <- logger.trace("Response for deleteZoneOverlay(): success")
     yield ()
 
   //  Home Control APIs  //
@@ -327,7 +329,7 @@ final class Tado4sClient[F[_]: Async] private (
       url     = config.apiBase / "homes" / request.homeId / "presence"
       body    = SetHomePresenceBody(homePresence = request.homePresence)
       _      <- client.successful(PUT(body, url))
-      _      <- logger.trace(s"Response for setHomePresence(): success")
+      _      <- logger.trace("Response for setHomePresence(): success")
     yield ()
 
   /**
@@ -382,7 +384,7 @@ final class Tado4sClient[F[_]: Async] private (
       client <- authenticator.getAuthenticatedClient()
       url     = config.apiBase / "homes" / homeId / "mobileDevices" / deviceId
       _      <- client.successful(DELETE(url))
-      _      <- logger.trace(s"Response for deleteMobileDevice(): success")
+      _      <- logger.trace("Response for deleteMobileDevice(): success")
     yield ()
 
   /**
@@ -437,30 +439,52 @@ final class Tado4sClient[F[_]: Async] private (
 object Tado4sClient {
 
   /**
-   * Creates a new instance of Tado4s client using http4s Ember Client
+   * Creates a new instance of Tado4s client as a [[Resource]].
    */
-  def apply[F[_]: Async: Network](maybeConfig: Option[TadoConfig]): F[Tado4sClient[F]] =
+  def make[F[_]: Async: Network](maybeConfig: Option[TadoConfig] = None): Resource[F, Tado4sClient[F]] =
     for
-      config        <- maybeConfig.getOrElse(TadoConfig.config).pure[F]
-      tlsContext    <- buildTlsContext(config)
-      httpClient    <- buildHttpClient(config, tlsContext)
-      authenticator <- Tado4sAuthentication(httpClient, config)
-      client         = new Tado4sClient[F](config, authenticator)
-    yield client
+      config       <- getConfig(maybeConfig)
+      tlsContext   <- buildTlsContext(config)
+      httpClient   <- buildHttpClient(config, tlsContext)
+      initialState <- Resource.eval(Tado4sAuthentication(httpClient, config))
+      result        = new Tado4sClient[F](config, initialState)
+    yield result
 
-  private def buildHttpClient[F[_]: Async: Network](config: TadoConfig, tlsContext: TLSContext[F]): F[Client[F]] =
+  private def getConfig[F[_]: MonadThrow](maybeConfig: Option[TadoConfig]): Resource[F, TadoConfig] =
+    Resource.eval {
+      maybeConfig
+        .map(_.pure)
+        .getOrElse {
+          MonadThrow[F].fromEither(TadoConfig.config)
+        }
+    }
+
+  private def buildHttpClient[F[_]: Async: Network](
+    config: TadoConfig,
+    tlsContext: TLSContext[F],
+  ): Resource[F, Client[F]] =
     EmberClientBuilder
       .default[F]
       .withTimeout(config.httpTimeout)
+      .withIdleConnectionTime(config.httpTimeout.plus(1.second))
       .withTLSContext(tlsContext)
       .build
-      .allocated
-      .map {
-        case (httpClient, _) => ClientLogger(SSLValidationClient(config.ignoreSsl)(httpClient))
+      .map { client =>
+        ClientLogger {
+          val backoff     = RetryPolicy.exponentialBackoff(config.httpRetryTimeMax, config.httpRetriesMax)
+          val retryPolicy = RetryPolicy[F](backoff = backoff)
+          Retry(retryPolicy) {
+            client
+          }
+        }
       }
 
-  private def buildTlsContext[F[_]: Network](config: TadoConfig): F[TLSContext[F]] =
-    if config.ignoreSsl then Network[F].tlsContext.insecure
-    else Network[F].tlsContext.system
+  private def buildTlsContext[F[_]: Network](config: TadoConfig): Resource[F, TLSContext[F]] =
+    Resource.eval {
+      if config.ignoreSsl then
+        Network[F].tlsContext.insecure
+      else
+        Network[F].tlsContext.system
+    }
 
 }

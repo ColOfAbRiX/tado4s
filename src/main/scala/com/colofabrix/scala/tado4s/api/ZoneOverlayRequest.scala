@@ -2,7 +2,9 @@ package com.colofabrix.scala.tado4s.api
 
 import io.circe.Encoder
 
-/** Request to set a zone overlay (manual control) */
+/**
+ * Request to set a zone overlay (manual control)
+ */
 final case class SetZoneOverlayRequest(
   homeId: Int,
   zoneId: Int,
@@ -12,17 +14,26 @@ final case class SetZoneOverlayRequest(
 
 object ZoneOverlayRequest {
 
+  /**
+   * Heating setting with type, power state, and optional temperature
+   */
   final case class Setting(
     `type`: String,
     power: String,
     temperature: Option[Temperature],
   ) derives Encoder.AsObject
 
+  /**
+   * Temperature in Celsius and Fahrenheit (both optional for requests)
+   */
   final case class Temperature(
     celsius: Option[Double],
     fahrenheit: Option[Double],
   ) derives Encoder.AsObject
 
+  /**
+   * Overlay termination mode with optional duration
+   */
   final case class Termination(
     `type`: String,
     durationInSeconds: Option[Int],
@@ -30,7 +41,9 @@ object ZoneOverlayRequest {
 
 }
 
-/** Request to delete a zone overlay */
+/**
+ * Request to delete a zone overlay
+ */
 final case class DeleteZoneOverlayRequest(
   homeId: Int,
   zoneId: Int,

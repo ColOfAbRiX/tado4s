@@ -3,7 +3,7 @@ package com.colofabrix.scala.tado4s.api
 import io.circe.Decoder
 
 /**
- * AuthResponse
+ * OAuth2 token response containing access and refresh tokens
  */
 final case class AuthResponse(
   access_token: String,

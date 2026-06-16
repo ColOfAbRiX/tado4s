@@ -4,7 +4,7 @@ import io.circe.Decoder
 import java.time.*
 
 /**
- * HomeResponse
+ * Home configuration including name, address, and climate zone settings
  */
 final case class HomeResponse(
   id: Int,
@@ -36,6 +36,9 @@ final case class HomeResponse(
 
 object HomeResponse {
 
+  /**
+   * Home address
+   */
   final case class Address(
     addressLine1: String,
     addressLine2: Option[String],
@@ -45,17 +48,26 @@ object HomeResponse {
     country: String,
   ) derives Decoder
 
+  /**
+   * Home contact details
+   */
   final case class ContactDetails(
     name: String,
     email: String,
     phone: String,
   ) derives Decoder
 
+  /**
+   * Home geolocation coordinates
+   */
   final case class Geolocation(
     latitude: Double,
     longitude: Double,
   ) derives Decoder
 
+  /**
+   * Incident detection settings for the home
+   */
   final case class IncidentDetection(
     supported: Boolean,
     enabled: Boolean,

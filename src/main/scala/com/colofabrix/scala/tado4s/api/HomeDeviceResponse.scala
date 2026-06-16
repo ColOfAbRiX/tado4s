@@ -6,7 +6,7 @@ import io.circe.*
 import io.circe.derivation.Configuration
 
 /**
- * HomeDeviceResponse
+ * Registered device information including firmware version and connection status
  */
 final case class HomeDeviceResponse(
   deviceType: String,
@@ -24,15 +24,24 @@ final case class HomeDeviceResponse(
   childLockEnabled: Option[Boolean],
 ) derives Decoder
 
+/**
+ * Device characteristics including capabilities
+ */
 final case class Characteristics(
   capabilities: Vector[String],
 ) derives Decoder
 
+/**
+ * Device connection state with timestamp
+ */
 final case class ConnectionState(
   value: Boolean,
   timestamp: String,
 ) derives Decoder
 
+/**
+ * Device mounting state with timestamp
+ */
 final case class MountingState(
   value: String,
   timestamp: String,
@@ -43,7 +52,8 @@ sealed trait DeviceOrientation extends EnumEntry with UpperSnakecase
 object DeviceOrientation extends Enum[DeviceOrientation] with CirceEnum[DeviceOrientation] {
 
   case object Horizontal extends DeviceOrientation
-  case object Vertical   extends DeviceOrientation
+
+  case object Vertical extends DeviceOrientation
 
   val values = findValues
 

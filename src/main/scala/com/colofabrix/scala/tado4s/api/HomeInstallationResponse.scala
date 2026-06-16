@@ -15,6 +15,9 @@ final case class HomeInstallationResponse(
   devices: Vector[Device],
 ) derives Decoder
 
+/**
+ * Installed device with firmware version and connection details
+ */
 final case class Device(
   deviceType: String,
   serialNo: String,

@@ -6,6 +6,8 @@
 .metals
 .vscode
 .scala-build
+.roo
+plans
 out
 target
 

@@ -1,3 +1,6 @@
+[![CI](https://github.com/ColOfAbRiX/tado4s/actions/workflows/ci.yml/badge.svg)](https://github.com/ColOfAbRiX/tado4s/actions/workflows/ci.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/com.colofabrix.scala/tado4s_3.svg)](https://central.sonatype.com/artifact/com.colofabrix.scala/tado4s_3)
+[![Scala 3](https://img.shields.io/badge/Scala-3.3-blue.svg)](https://www.scala-lang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # Tado4s - Tado API Client for Scala
@@ -58,7 +61,8 @@ HOMEDATA_TADO_TOKEN_ISSUE_TIME="2024-01-01T00:00:00+00:00"
 
 ### Basic Usage
 
-Create a client and fetch account information:
+Create a client and fetch account information. The client is created as a `Resource` that
+properly manages the HTTP connection lifecycle:
 
 ```scala
 import cats.effect.*
@@ -69,14 +73,14 @@ import java.time.OffsetDateTime
 object MyApp extends IOApp.Simple {
 
   def run: IO[Unit] =
-    for
-      client       <- Tado4sClient[IO](None)
-      initialToken = TadoRefreshToken("your-refresh-token", OffsetDateTime.now())
-      _            <- client.authenticate(initialToken)
-      account      <- client.getAccountInfo()
-      homeId        = account.homes.head.id
-      _            <- IO.println(s"Home ID: $homeId")
-    yield ()
+    Tado4sClient.make[IO]().use: client =>
+      for
+        initialToken = TadoRefreshToken("your-refresh-token", OffsetDateTime.now())
+        _            <- client.authenticate(initialToken)
+        account      <- client.getAccountInfo()
+        homeId        = account.homes.head.id
+        _            <- IO.println(s"Home ID: $homeId")
+      yield ()
 
 }
 ```
@@ -84,9 +88,8 @@ object MyApp extends IOApp.Simple {
 ### Get Zone Information
 
 ```scala
-val zones =
+Tado4sClient.make[IO]().use: client =>
   for
-    client  <- Tado4sClient[IO](None)
     _       <- client.authenticate(initialToken)
     account <- client.getAccountInfo()
     homeId   = account.homes.head.id
@@ -97,11 +100,10 @@ val zones =
 ### Get Zone State
 
 ```scala
-val zoneState =
+Tado4sClient.make[IO]().use: client =>
   for
-    client <- Tado4sClient[IO](None)
-    _      <- client.authenticate(initialToken)
-    state  <- client.getZoneState(homeId = 12345, zoneId = 1)
+    _     <- client.authenticate(initialToken)
+    state <- client.getZoneState(homeId = 12345, zoneId = 1)
   yield state
 ```
 
@@ -110,9 +112,8 @@ val zoneState =
 ```scala
 import java.time.LocalDate
 
-val dayReport =
+Tado4sClient.make[IO]().use: client =>
   for
-    client <- Tado4sClient[IO](None)
     _      <- client.authenticate(initialToken)
     report <- client.getZoneDayReport(
       homeId = 12345,
@@ -125,12 +126,35 @@ val dayReport =
 ### Get Weather
 
 ```scala
-val weather =
+Tado4sClient.make[IO]().use: client =>
   for
-    client  <- Tado4sClient[IO](None)
     _       <- client.authenticate(initialToken)
     weather <- client.getHomeWeather(homeId = 12345)
   yield weather
+```
+
+### Streaming Day Reports
+
+Use the streaming DSL to fetch day reports across a date range:
+
+```scala
+import com.colofabrix.scala.tado4s.Tado4sStreamDSL.*
+import java.time.LocalDate
+
+Tado4sClient.make[IO]().use: client =>
+  for
+    _ <- client.authenticate(initialToken)
+    _ <- client.streamZoneDayReports(
+           homeId = 12345,
+           zoneId = 1,
+           from = LocalDate.now().minusDays(7),
+           to = LocalDate.now(),
+         )
+         .evalMap: report =>
+           IO.println(s"Report for ${report.interval}: ${report.measuredData}")
+         .compile
+         .drain
+  yield ()
 ```
 
 ## API Reference
@@ -174,18 +198,29 @@ The main entry point for interacting with the Tado API.
 
 ### Response Types
 
-| Type                       | Description                       |
-|----------------------------|-----------------------------------|
-| `AccountResponse`          | User account with home list       |
-| `HomeResponse`             | Home configuration and settings   |
-| `HomeZoneResponse`         | Zone configuration                |
-| `HomeStateResponse`        | Home presence state               |
-| `HomeDeviceResponse`       | Device information                |
-| `HomeInstallationResponse` | Installation details              |
-| `HomeUserResponse`         | User information                  |
-| `ZoneStateResponse`        | Zone temperature and settings     |
-| `WeatherResponse`          | Current weather data              |
-| `DayReportResponse`        | Historical zone data              |
+| Type                            | Description                              |
+|---------------------------------|------------------------------------------|
+| `AccountResponse`               | User account with home list              |
+| `HomeResponse`                  | Home configuration and settings          |
+| `HomeZoneResponse`              | Zone configuration                       |
+| `HomeStateResponse`             | Home presence state                      |
+| `HomeDeviceResponse`            | Device information                       |
+| `HomeInstallationResponse`      | Installation details                     |
+| `HomeUserResponse`              | User information                         |
+| `ZoneStateResponse`             | Zone temperature and settings            |
+| `ZoneCapabilitiesResponse`      | Zone temperature capabilities            |
+| `ZoneOverlayResponse`           | Manual control overlay result            |
+| `ActiveTimetableResponse`       | Currently active schedule timetable      |
+| `TimetablesResponse`            | List of available schedule timetables    |
+| `TimetableBlocksResponse`       | Schedule blocks for a timetable          |
+| `EarlyStartResponse`            | Early start settings                     |
+| `AwayConfigurationResponse`     | Away mode configuration                  |
+| `MobileDevicesResponse`         | Mobile devices with location data        |
+| `MobileDeviceSettingsResponse`  | Mobile device geo-tracking settings      |
+| `HeatingCircuitsResponse`       | Heating circuit information              |
+| `AirComfortResponse`            | Air comfort and freshness data           |
+| `WeatherResponse`               | Current weather data                     |
+| `DayReportResponse`             | Historical zone data for a specific day  |
 
 ### Configuration
 
@@ -193,14 +228,15 @@ Configure the client via `application.conf`:
 
 ```hocon
 tado4s {
-  api-auth       = "https://login.tado.com"
-  api-base       = "https://my.tado.com/api/v2"
-  http-timeout   = 30 seconds
-  max-retries    = 5
-  max-retry-time = 1 minute
-  ignore-ssl     = false
-  client-id      = ${?TADO4S_CLIENT_ID}
-  token-path     = ~/.tado4s/token.conf
+  api-auth                   = "https://login.tado.com"
+  api-base                   = "https://my.tado.com/api/v2"
+  api-client-id              = ${?TADO4S_CLIENT_ID}
+  token-path                 = ~/.tado4s/token.conf
+  http-timeout               = 30 seconds
+  http-retries-max           = 5
+  http-retry-time-max        = 1 minute
+  ignore-ssl                 = false
+  streaming-concurrency-max  = 4
 }
 ```
 
@@ -214,15 +250,17 @@ val config =
   TadoConfig(
     apiBase = Uri.unsafeFromString("https://my.tado.com/api/v2"),
     apiAuth = Uri.unsafeFromString("https://login.tado.com"),
-    clientId = "your-client-id",
+    apiClientId = "your-client-id",
     tokenPath = Paths.get(System.getProperty("user.home"), ".tado4s", "token.conf"),
     httpTimeout = 30.seconds,
-    maxRetries = 5,
-    maxRetryTime = 1.minute,
+    httpRetriesMax = 5,
+    httpRetryTimeMax = 1.minute,
     ignoreSsl = false,
   )
 
-val client = Tado4sClient[IO](Some(config))
+Tado4sClient.make[IO](Some(config)).use: client =>
+  // use client here
+  IO.unit
 ```
 
 ### Token Persistence
@@ -247,8 +285,10 @@ import com.colofabrix.scala.tado4s.*
 client
   .getZoneState(homeId, zoneId)
   .handleErrorWith {
-    case Tado4sError(message, Some(tadoError)) =>
-      IO.println(s"API error: ${tadoError.message}")
+    case Tado4sError(message, Some(inner: TadoErrorResponse)) =>
+      IO.println(s"API error: ${inner.errors.mkString(", ")}")
+    case Tado4sError(message, Some(inner)) =>
+      IO.println(s"Error: $message - ${inner.getMessage}")
     case Tado4sError(message, None) =>
       IO.println(s"Client error: $message")
   }

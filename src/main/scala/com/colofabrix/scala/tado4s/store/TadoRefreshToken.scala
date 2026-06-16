@@ -3,7 +3,6 @@ package com.colofabrix.scala.tado4s.store
 import com.typesafe.config.{ ConfigFactory, ConfigValueFactory }
 import java.time.OffsetDateTime
 import pureconfig.*
-import pureconfig.generic.derivation.default.*
 
 /**
  * Refresh token with issue time for token comparison

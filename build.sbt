@@ -3,20 +3,20 @@ import xerial.sbt.Sonatype._
 
 // Project Information
 
-val scala3Version = "3.7.4"
+val scala3Version = "3.3.7"
 
-val caseInsensitiveVersion = "1.4.0"
-val catsEffectVersion      = "3.5.4"
+val caseInsensitiveVersion = "1.5.0"
+val catsEffectVersion      = "3.5.7"
 val catsVersion            = "2.12.0"
-val circeCoreVersion       = "0.14.10"
-val enumeratumVersion      = "1.7.5"
-val fs2Version             = "3.9.3"
-val h4sblVersion           = "1.0.0"
-val http4sClientVersion    = "0.23.24"
-val log4catsVersion        = "2.7.0"
-val pureconfigVersion      = "0.17.4"
-val scalatestVersion       = "3.2.17"
-val scodecBitsVersion      = "1.1.38"
+val circeCoreVersion       = "0.14.15"
+val enumeratumVersion      = "1.9.8"
+val fs2Version             = "3.12.2"
+val h4sblVersion           = "1.1.0"
+val http4sClientVersion    = "0.23.34"
+val log4catsVersion        = "2.8.0"
+val pureconfigVersion      = "0.17.10"
+val scalatestVersion       = "3.2.20"
+val scodecBitsVersion      = "1.2.5"
 
 // Global Settings
 
@@ -25,18 +25,23 @@ Global / onChangedBuildSource    := ReloadOnSourceChanges
 Global / tpolecatExcludeOptions ++= Set(ScalacOptions.warnUnusedLocals, ScalacOptions.warnUnusedImports)
 Test / tpolecatScalacOptions     := Set.empty
 
-addCommandAlias("styleApply", "; scalafix OrganizeImports; scalafmtAll")
-addCommandAlias("styleCheck", "; scalafix --check; scalafmtCheckAll")
+addCommandAlias(
+  "styleApply",
+  "; set ThisBuild / scalacOptions += \"-Wunused:all\"; scalafixEnable; scalafixAll; session clear; scalafmtAll"
+)
+addCommandAlias(
+  "styleCheck",
+  "; set ThisBuild / scalacOptions += \"-Wunused:all\"; scalafixEnable; scalafixAll --check; session clear; scalafmtCheckAll"
+)
 
 lazy val root =
   project
     .in(file("."))
     .settings(
       name                 := "tado4s",
-      version              := "1.0.1",
+      version              := "2.0.0",
       organization         := "com.colofabrix.scala",
       scalaVersion         := scala3Version,
-      scalacOptions        += "-preview",
       libraryDependencies ++= List(
         "co.fs2"                %% "fs2-core"            % fs2Version,
         "co.fs2"                %% "fs2-io"              % fs2Version,
@@ -104,7 +109,7 @@ lazy val publishSettings =
     // Scaladoc settings
     Compile / doc / scalacOptions ++= Seq(
       "-doc-title",
-      "Cuttlefish API Documentation",
+      "Tado4s API Documentation",
       "-doc-version",
       version.value,
       "-encoding",

@@ -1,12 +1,11 @@
-package com.colofabrix.scala.homedata.tado.readings
+package com.colofabrix.scala.tado4s.api
 
 import com.colofabrix.scala.tado4s.api.*
-import io.circe.parser.{ decode => circeDecode }
+import io.circe.parser.decode as circeDecode
 import org.scalatest.EitherValues
 import org.scalatest.freespec.AnyFreeSpecLike
 import org.scalatest.matchers.should.Matchers
 import scala.io.Source
-import java.time.OffsetDateTime
 
 class TadoApiDecoders extends AnyFreeSpecLike with Matchers with EitherValues {
 

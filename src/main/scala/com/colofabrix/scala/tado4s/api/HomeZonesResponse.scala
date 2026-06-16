@@ -4,7 +4,7 @@ import io.circe.Decoder
 import java.time.*
 
 /**
- * HomeZoneResponse
+ * Zone configuration including name, type, and associated devices
  */
 final case class HomeZoneResponse(
   id: Int,
@@ -23,11 +23,17 @@ final case class HomeZoneResponse(
 
 object HomeZoneResponse {
 
+  /**
+   * Dazzle mode settings for the zone
+   */
   final case class DazzleMode(
     supported: Boolean,
     enabled: Option[Boolean],
   ) derives Decoder
 
+  /**
+   * Device assigned to a zone with firmware and connection details
+   */
   final case class Device(
     deviceType: String,
     serialNo: String,
@@ -44,15 +50,24 @@ object HomeZoneResponse {
     isDriverConfigured: Option[Boolean],
   ) derives Decoder
 
+  /**
+   * Device characteristics including capabilities
+   */
   final case class Characteristics(
     capabilities: Vector[String],
   ) derives Decoder
 
+  /**
+   * A typed value with a timestamp
+   */
   final case class State[A](
     value: A,
     timestamp: OffsetDateTime,
   ) derives Decoder
 
+  /**
+   * Open window detection settings for a zone
+   */
   final case class OpenWindowDetection(
     supported: Boolean,
     enabled: Option[Boolean],

@@ -4,7 +4,7 @@ import io.circe.Decoder
 import java.time.*
 
 /**
- * WeatherResponse
+ * Current weather conditions at the home location including temperature and solar intensity
  */
 final case class WeatherResponse(
   solarIntensity: WeatherResponse.SolarIntensity,
@@ -14,6 +14,9 @@ final case class WeatherResponse(
 
 object WeatherResponse {
 
+  /**
+   * Outside temperature reading with precision and timestamp
+   */
   final case class OutsideTemperature(
     celsius: Double,
     fahrenheit: Double,
@@ -22,17 +25,26 @@ object WeatherResponse {
     precision: Temperature,
   ) derives Decoder
 
+  /**
+   * Temperature in Celsius and Fahrenheit
+   */
   final case class Temperature(
     celsius: Double,
     fahrenheit: Double,
   ) derives Decoder
 
+  /**
+   * Solar intensity as a percentage with timestamp
+   */
   final case class SolarIntensity(
     `type`: String,
     percentage: Double,
     timestamp: OffsetDateTime,
   ) derives Decoder
 
+  /**
+   * Weather condition state with value and timestamp
+   */
   final case class WeatherState(
     `type`: String,
     value: String,
