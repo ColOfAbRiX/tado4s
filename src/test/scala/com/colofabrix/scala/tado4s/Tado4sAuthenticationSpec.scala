@@ -25,8 +25,8 @@ class Tado4sAuthenticationSpec extends AsyncFreeSpec with Matchers {
       dir.resolve("token.conf")
     }
 
-  private def testConfig(tokenPath: Path): TadoConfig =
-    TadoConfig(
+  private def testConfig(tokenPath: Path): Tado4sConfig =
+    Tado4sConfig(
       apiBase = Uri.unsafeFromString("https://api.example.com"),
       apiAuth = Uri.unsafeFromString("https://auth.example.com"),
       apiClientId = "test-client-id",

@@ -28,7 +28,7 @@ import scala.concurrent.duration.*
  *            https://kritsel.github.io/tado-openapispec-v2/swagger.html
  */
 final class Tado4sClient[F[_]: Async] private (
-  val config: TadoConfig,
+  val config: Tado4sConfig,
   authenticator: Tado4sAuthentication[F],
 ) extends Http4sClientDsl[F] {
 
@@ -441,26 +441,26 @@ object Tado4sClient {
   /**
    * Creates a new instance of Tado4s client as a [[Resource]].
    */
-  def make[F[_]: Async: Network](maybeConfig: Option[TadoConfig] = None): Resource[F, Tado4sClient[F]] =
+  def make[F[_]: Async: Network](maybeConfig: Option[Tado4sConfig] = None): Resource[F, Tado4sClient[F]] =
     for
       config       <- getConfig(maybeConfig)
       tlsContext   <- buildTlsContext(config)
       httpClient   <- buildHttpClient(config, tlsContext)
-      initialState <- Resource.eval(Tado4sAuthentication(httpClient, config))
+      initialState  = Tado4sAuthentication(httpClient, config)
       result        = new Tado4sClient[F](config, initialState)
     yield result
 
-  private def getConfig[F[_]: MonadThrow](maybeConfig: Option[TadoConfig]): Resource[F, TadoConfig] =
+  private def getConfig[F[_]: MonadThrow](maybeConfig: Option[Tado4sConfig]): Resource[F, Tado4sConfig] =
     Resource.eval {
       maybeConfig
         .map(_.pure)
         .getOrElse {
-          MonadThrow[F].fromEither(TadoConfig.config)
+          MonadThrow[F].fromEither(Tado4sConfig.config)
         }
     }
 
   private def buildHttpClient[F[_]: Async: Network](
-    config: TadoConfig,
+    config: Tado4sConfig,
     tlsContext: TLSContext[F],
   ): Resource[F, Client[F]] =
     EmberClientBuilder
@@ -479,7 +479,7 @@ object Tado4sClient {
         }
       }
 
-  private def buildTlsContext[F[_]: Network](config: TadoConfig): Resource[F, TLSContext[F]] =
+  private def buildTlsContext[F[_]: Network](config: Tado4sConfig): Resource[F, TLSContext[F]] =
     Resource.eval {
       if config.ignoreSsl then
         Network[F].tlsContext.insecure

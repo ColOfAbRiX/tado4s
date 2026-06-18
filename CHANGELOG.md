@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - Unreleased
+## [2.0.0] - 2026-06-17
 
 ### Added
 
@@ -17,18 +17,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **BREAKING:** Downgraded Scala from 3.7.4 to 3.3.7 LTS
+- **BREAKING:** Scala version changed to 3.3.7 LTS for broader binary compatibility
 - **BREAKING:** `Tado4sClient` is now created via `Tado4sClient.make[F]()` returning a `Resource`, replacing direct instantiation
-- **BREAKING:** Renamed `TadoConfig` fields: `clientId` → `apiClientId`, `maxRetries` → `httpRetriesMax`, `maxRetryTime` → `httpRetryTimeMax`
-- **BREAKING:** Removed `SSLValidationClient`; SSL bypass now uses built-in `TLSContext.insecure`
-- **BREAKING:** `Tado4sTokenStore` methods (`load`, `save`, `clear`) now take an explicit `tokenPath` parameter
+- **BREAKING:** Renamed `TadoConfig` to `Tado4sConfig`
+- **BREAKING:** Renamed `Tado4sConfig` fields
 - **BREAKING:** `ignoreSsl` defaults to `false`
-- `TadoConfig.config` now returns `Either[TadoConfigError, TadoConfig]` instead of throwing on failure
-- HTTP retry logic moved from authentication layer to the HTTP client builder
-- Token store (`Tado4sTokenStore`) is now stateless, no longer depends on global `TadoConfig`
-- `TadoConfig.toString` now masks `apiClientId`
-- Updated dependencies: cats-effect 3.5.7, circe 0.14.15, fs2 3.12.2, http4s 0.23.34, enumeratum 1.9.8, log4cats 2.8.0, pureconfig 0.17.10, scalatest 3.2.20, scodec-bits 1.2.5, case-insensitive 1.5.0
-- Updated sbt plugins: sbt-scalafix 0.14.7, sbt-tpolecat 0.5.6, sbt-sonatype 3.12.2
+- `Tado4sConfig.config` now returns `Either[TadoConfigError, Tado4sConfig]` instead of throwing on failure
+- `Tado4sConfig.toString` now masks `apiClientId`
+- Updated dependencies:
+  - cats-effect 3.5.7
+  - circe 0.14.15
+  - fs2 3.12.2
+  - http4s 0.23.34
+  - enumeratum 1.9.8
+  - log4cats 2.8.0
+  - pureconfig 0.17.10
+  - scalatest 3.2.20
+  - scodec-bits 1.2.5
+  - case-insensitive 1.5.0
+- Updated sbt plugins:
+  - sbt-scalafix 0.14.7
+  - sbt-tpolecat 0.5.6
+  - sbt-sonatype 3.12.2
 
 ### Fixed
 

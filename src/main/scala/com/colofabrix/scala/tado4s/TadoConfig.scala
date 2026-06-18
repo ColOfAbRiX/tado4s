@@ -19,7 +19,7 @@ import scala.concurrent.duration.*
  * @param ignoreSsl Setting to disable SSL endpoint verification
  * @param streamingConcurrencyMax Maximum number of concurrent page fetches when streaming
  */
-final case class TadoConfig(
+final case class Tado4sConfig(
   apiBase: Uri,
   apiAuth: Uri,
   apiClientId: String,
@@ -32,7 +32,7 @@ final case class TadoConfig(
 ) derives ConfigReader {
 
   override def toString: String =
-    s"TadoConfig(apiBase=$apiBase, apiAuth=$apiAuth, apiClientId=***, tokenPath=$tokenPath, " +
+    s"Tado4sConfig(apiBase=$apiBase, apiAuth=$apiAuth, apiClientId=***, tokenPath=$tokenPath, " +
     s"httpTimeout=$httpTimeout, httpRetriesMax=$httpRetriesMax, httpRetryTimeMax=$httpRetryTimeMax, " +
     s"ignoreSsl=$ignoreSsl, streamingConcurrencyMax=$streamingConcurrencyMax)"
 
@@ -41,13 +41,13 @@ final case class TadoConfig(
 /**
  * Tado4s configuration
  */
-object TadoConfig {
+object Tado4sConfig {
 
-  val config: Either[TadoConfigError, TadoConfig] =
+  val config: Either[TadoConfigError, Tado4sConfig] =
     ConfigSource
       .default
       .at("tado4s")
-      .load[TadoConfig]
+      .load[Tado4sConfig]
       .leftMap { errors =>
         TadoConfigError(errors.toList.map(_.toString).mkString("(", ",", ")"))
       }

@@ -24,7 +24,7 @@ Global / run / fork              := true
 Global / onChangedBuildSource    := ReloadOnSourceChanges
 Global / tpolecatExcludeOptions ++= Set(ScalacOptions.warnUnusedLocals, ScalacOptions.warnUnusedImports)
 Test / tpolecatScalacOptions     := Set.empty
-
+isSnapshot := true
 addCommandAlias(
   "styleApply",
   "; set ThisBuild / scalacOptions += \"-Wunused:all\"; scalafixEnable; scalafixAll; session clear; scalafmtAll"

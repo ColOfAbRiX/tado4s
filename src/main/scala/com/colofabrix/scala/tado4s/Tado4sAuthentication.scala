@@ -29,7 +29,7 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
  */
 final class Tado4sAuthentication[F[_]: Async] private (
   httpClient: Client[F],
-  config: TadoConfig,
+  config: Tado4sConfig,
   atomicState: AtomicCell[F, AuthState[F]],
 ) extends Http4sClientDsl[F] {
 
@@ -222,7 +222,7 @@ object Tado4sAuthentication {
    * Create a new Tado4sAuthentication instance with its own internal state. The authentication state is completely
    * encapsulated - not visible to callers.
    */
-  def apply[F[_]: Async](httpClient: Client[F], config: TadoConfig): F[Tado4sAuthentication[F]] =
+  def apply[F[_]: Async](httpClient: Client[F], config: Tado4sConfig): F[Tado4sAuthentication[F]] =
     for
       atomicState <- AtomicCell[F].of[AuthState[F]](AuthState.Unauthenticated())
       result       = new Tado4sAuthentication[F](httpClient, config, atomicState)

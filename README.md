@@ -247,7 +247,7 @@ import scala.concurrent.duration.*
 import java.nio.file.Paths
 
 val config =
-  TadoConfig(
+  Tado4sConfig(
     apiBase = Uri.unsafeFromString("https://my.tado.com/api/v2"),
     apiAuth = Uri.unsafeFromString("https://login.tado.com"),
     apiClientId = "your-client-id",
