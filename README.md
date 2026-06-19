@@ -1,4 +1,3 @@
-[![CI](https://github.com/ColOfAbRiX/tado4s/actions/workflows/ci.yml/badge.svg)](https://github.com/ColOfAbRiX/tado4s/actions/workflows/ci.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/com.colofabrix.scala/tado4s_3.svg)](https://central.sonatype.com/artifact/com.colofabrix.scala/tado4s_3)
 [![Scala 3](https://img.shields.io/badge/Scala-3.3-blue.svg)](https://www.scala-lang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

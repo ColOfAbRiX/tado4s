@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TadoConfigError` typed error for configuration loading failures
 - Concurrency test suite for `Tado4sAuthentication` with single-flight, stress, and deadlock scenarios
 - CI, Maven Central, and Scala 3 badges in README
+- Added logging on creation
 
 ### Changed
 
