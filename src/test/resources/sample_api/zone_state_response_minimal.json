@@ -1,0 +1,9 @@
+{
+  "tadoMode": "HOME",
+  "geolocationOverride": false,
+  "setting": {
+    "type": "HOT_WATER",
+    "power": "ON"
+  },
+  "sensorDataPoints": {}
+}

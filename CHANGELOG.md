@@ -44,6 +44,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Thread-safety issue in `Tado4sTokenStore.clear` that could fail under concurrent access on Windows
+- `AccountResponse.MobileDevice.location` and `HomeUserResponse.MobileDevices.location` are now `Option[Location]` to handle API responses where mobile devices have no location data
+- `ZoneStateResponse.nextScheduleChange`, `link`, and `activityDataPoints` are now `Option` to handle hot water zones and zones without active schedules
+- `HomeZoneResponse.dazzleMode` and `openWindowDetection` are now `Option` to handle zones that don't support these features
 - Documentation updated to use resource-based client creation pattern
 
 ## [1.0.1] - 2026-04-14

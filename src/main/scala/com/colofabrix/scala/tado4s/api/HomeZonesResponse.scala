@@ -17,8 +17,8 @@ final case class HomeZoneResponse(
   showScheduleSetup: Boolean,
   supportsDazzle: Boolean,
   dazzleEnabled: Boolean,
-  dazzleMode: HomeZoneResponse.DazzleMode,
-  openWindowDetection: HomeZoneResponse.OpenWindowDetection,
+  dazzleMode: Option[HomeZoneResponse.DazzleMode],
+  openWindowDetection: Option[HomeZoneResponse.OpenWindowDetection],
 ) derives Decoder
 
 object HomeZoneResponse {

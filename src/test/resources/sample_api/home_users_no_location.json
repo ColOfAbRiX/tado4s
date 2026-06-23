@@ -1,0 +1,44 @@
+[
+  {
+    "name": "John Smith",
+    "email": "johnsmith@gmail.com",
+    "username": "johnsmith@gmail.com",
+    "id": "84e18963-5465-83f7-9fe8-b97b47e477ba",
+    "homes": [
+      {
+        "id": 1412408,
+        "name": "The House"
+      }
+    ],
+    "locale": "en",
+    "mobileDevices": [
+      {
+        "name": "John's Phone",
+        "id": 8212757,
+        "settings": {
+          "geoTrackingEnabled": true,
+          "specialOffersEnabled": false,
+          "onDemandLogRetrievalEnabled": false,
+          "pushNotifications": {
+            "lowBatteryReminder": true,
+            "awayModeReminder": true,
+            "homeModeReminder": true,
+            "openWindowReminder": true,
+            "energySavingsReportReminder": true,
+            "incidentDetection": true,
+            "energyIqReminder": false,
+            "tariffHighPriceAlert": true,
+            "tariffLowPriceAlert": true,
+            "smartReminders": true
+          }
+        },
+        "deviceMetadata": {
+          "platform": "Android",
+          "osVersion": "15",
+          "model": "OnePlus_CPH2653",
+          "locale": "en"
+        }
+      }
+    ]
+  }
+]

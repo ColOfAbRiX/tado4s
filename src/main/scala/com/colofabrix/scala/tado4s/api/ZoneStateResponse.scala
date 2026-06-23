@@ -10,9 +10,9 @@ final case class ZoneStateResponse(
   tadoMode: String,
   geolocationOverride: Boolean,
   setting: ZoneStateResponse.Setting,
-  nextScheduleChange: ZoneStateResponse.NextScheduleChange,
-  link: ZoneStateResponse.Link,
-  activityDataPoints: ZoneStateResponse.ActivityDataPoints,
+  nextScheduleChange: Option[ZoneStateResponse.NextScheduleChange],
+  link: Option[ZoneStateResponse.Link],
+  activityDataPoints: Option[ZoneStateResponse.ActivityDataPoints],
   sensorDataPoints: ZoneStateResponse.SensorDataPoints,
 ) derives Decoder
 

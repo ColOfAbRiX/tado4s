@@ -33,7 +33,7 @@ object AccountResponse {
     name: String,
     id: Int,
     settings: Settings,
-    location: Location,
+    location: Option[Location],
     deviceMetadata: DeviceMetadata,
   ) derives Decoder
 

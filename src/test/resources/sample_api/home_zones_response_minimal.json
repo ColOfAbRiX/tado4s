@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "name": "Hot Water",
+    "type": "HOT_WATER",
+    "dateCreated": "2023-11-23T13:13:24.079Z",
+    "deviceTypes": [
+      "VA01"
+    ],
+    "devices": [
+      {
+        "deviceType": "VA01",
+        "serialNo": "VA1234567890",
+        "shortSerialNo": "VA1234567890",
+        "currentFwVersion": "95.1",
+        "connectionState": {
+          "value": true,
+          "timestamp": "2024-01-24T22:30:04.509Z"
+        },
+        "characteristics": {
+          "capabilities": []
+        },
+        "duties": [
+          "ZONE_UI",
+          "ZONE_DRIVER"
+        ]
+      }
+    ],
+    "reportAvailable": false,
+    "showScheduleSetup": false,
+    "supportsDazzle": false,
+    "dazzleEnabled": false
+  }
+]

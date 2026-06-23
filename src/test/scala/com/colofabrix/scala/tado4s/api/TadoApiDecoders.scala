@@ -35,6 +35,12 @@ class TadoApiDecoders extends AnyFreeSpecLike with Matchers with EitherValues {
       actual should matchPattern { case Right(_) => }
     }
 
+    "for AccountResponse with missing mobile device location" in {
+      val json   = loadJson("account_response_no_location.json")
+      val actual = circeDecode[AccountResponse](json)
+      actual should matchPattern { case Right(_) => }
+    }
+
     "for HomeResponse" in {
       val json   = loadJson("home_response.json")
       val actual = circeDecode[HomeResponse](json)
@@ -59,8 +65,20 @@ class TadoApiDecoders extends AnyFreeSpecLike with Matchers with EitherValues {
       actual should matchPattern { case Right(_) => }
     }
 
+    "for HomeUserResponse with missing mobile device location" in {
+      val json   = loadJson("home_users_no_location.json")
+      val actual = circeDecode[List[HomeUserResponse]](json)
+      actual should matchPattern { case Right(_) => }
+    }
+
     "for HomeZoneResponse" in {
       val json   = loadJson("home_zones_response.json")
+      val actual = circeDecode[List[HomeZoneResponse]](json)
+      actual should matchPattern { case Right(_) => }
+    }
+
+    "for HomeZoneResponse with minimal fields (no dazzle/openWindow)" in {
+      val json   = loadJson("home_zones_response_minimal.json")
       val actual = circeDecode[List[HomeZoneResponse]](json)
       actual should matchPattern { case Right(_) => }
     }
@@ -73,6 +91,12 @@ class TadoApiDecoders extends AnyFreeSpecLike with Matchers with EitherValues {
 
     "for ZoneStateResponse" in {
       val json   = loadJson("zone_state_response.json")
+      val actual = circeDecode[ZoneStateResponse](json)
+      actual should matchPattern { case Right(_) => }
+    }
+
+    "for ZoneStateResponse with minimal fields (hot water zone)" in {
+      val json   = loadJson("zone_state_response_minimal.json")
       val actual = circeDecode[ZoneStateResponse](json)
       actual should matchPattern { case Right(_) => }
     }
